@@ -3,74 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kasir Ritel Bluetooth</title>
+    <title>Thermal Print Pro - All in One</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 15px;
-            color: #333;
-        }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #fff;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 520px; }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
+            border-radius: 16px;
             text-align: center;
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #2c3e50;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
-        .btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 12px;
+        .header h1 { font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px; }
+        .header p { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+        .card { 
+            background: #1e293b; 
+            border: 1px solid #334155;
+            padding: 18px; 
+            margin-bottom: 15px; 
+            border-radius: 14px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); 
         }
-        .btn-bt {
-            background-color: #27ae60;
-            color: white;
+        
+        label { display: block; font-weight: 600; font-size: 13px; color: #cbd5e1; margin-bottom: 6px; margin-top: 10px; }
+        label:first-child { margin-top: 0; }
+        
+        select, textarea, input { 
+            width: 100%; 
+            padding: 10px 12px; 
+            background: #0f172a; 
+            border: 1px solid #475569; 
+            color: #fff; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            margin-bottom: 8px; 
         }
-        .btn-calc {
-            background-color: #2980b9;
-            color: white;
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #3b82f6; }
+
+        button { 
+            width: 100%; 
+            padding: 13px; 
+            background: #2563eb; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: background 0.2s;
+            margin-top: 5px;
         }
-        .btn-print {
-            background-color: #e67e22;
-            color: white;
-        }
-        .form-group {
-            margin-bottom: 12px;
-        }
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        input, select {
-            width: 100%;
+        button:hover { background: #1d4ed8; }
+        .btn-success { background: #16a34a; }
+        .btn-success:hover { background: #15803d; }
+        .btn-calc { background: #0284c7; }
+        .btn-calc:hover { background: #0369a1; }
+        .btn-danger { background: #dc2626; padding: 6px 10px; font-size: 12px; margin-top: 0; }
+        .btn-danger:hover { background: #b91c1c; }
+
+        .item-row {
+            background: #0f172a;
+            border: 1px solid #334155;
             padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
-        .result-box {
-            background: #f8f9fa;
-            border: 1px dashed #bbb;
-            padding: 12px;
+
+        .status { 
+            margin-top: 10px; 
+            font-weight: 500; 
+            text-align: center; 
+            font-size: 13px; 
+            color: #fca5a5; 
+            background: #0f172a;
+            padding: 8px;
             border-radius: 6px;
-            margin-top: 15px;
+            border: 1px dashed #475569;
+        }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+
+        .result-box {
+            background: #0f172a;
+            border: 1px solid #475569;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
             font-size: 14px;
         }
         .result-box p {
@@ -78,157 +102,355 @@
             display: flex;
             justify-content: space-between;
         }
-        .status {
-            text-align: center;
-            font-size: 12px;
-            color: #e74c3c;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>KASIR RITEL & PRINTER</h2>
-    
-    <div id="statusPrinter" class="status">Printer Belum Terhubung</div>
-    <button class="btn btn-bt" onclick="hubungkanPrinter()">1. Hubungkan Printer Bluetooth</button>
+    <div class="container">
+        <div class="header">
+            <h1>THERMAL PRINT PRO</h1>
+            <p>Kasir Ritel, Gambar & PDF Terpadu</p>
+        </div>
+        
+        <!-- KONEKSI BLUETOOTH -->
+        <div class="card">
+            <label>Pengaturan Lebar Kertas (Dot):</label>
+            <select id="printerWidth">
+                <option value="384">Standar 58mm (384 Dot)</option>
+                <option value="480" selected>Sedang 80mm (480 Dot)</option>
+                <option value="750">Lebar Kasir Besar (750 Dot)</option>
+            </select>
+            <button id="connectBtn" class="btn-success">1. Hubungkan Printer Bluetooth</button>
+            <div class="status" id="statusText">Status: Belum Terhubung</div>
+        </div>
 
-    <div class="form-group">
-        <label>Nama Barang / Produk:</label>
-        <input type="text" id="namaBarang" value="Minyak Goreng 2L">
+        <!-- MENU 1: FORMAT NOTA RITEL (DENGAN TOMBOL TOTAL & KEMBALIAN DI BAWAH) -->
+        <div class="card">
+            <label style="font-size: 15px; color: #38bdf8; margin-bottom: 12px; font-weight: 700;">2. Form Struk Belanja Ritel</label>
+            
+            <label>Nama Toko:</label>
+            <input type="text" id="storeName" value="MINI MART OFFICIAL">
+
+            <label>Alamat & Kontak:</label>
+            <input type="text" id="storeAddress" value="Jl. Raya Merdeka No. 45, Bandung">
+
+            <label style="margin-top: 15px; color: #facc15;">Daftar Barang Belanjaan (Unlimited):</label>
+            <div id="itemsContainer">
+                <div class="item-row">
+                    <label style="font-size: 12px;">Nama Barang:</label>
+                    <input type="text" class="input-name" value="Minyak Goreng 2L">
+                    <div class="row">
+                        <div>
+                            <label style="font-size: 12px;">Harga (Rp):</label>
+                            <input type="number" class="input-price" value="35000">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px;">Qty:</label>
+                            <input type="number" class="input-qty" value="2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="addItemBtn" style="background: #475569; margin-bottom: 15px;">+ Tambah Baris Barang</button>
+
+            <label>Diskon Total (%):</label>
+            <select id="discountPct">
+                <option value="0">0%</option>
+                <option value="5">5%</option>
+                <option value="10" selected>10%</option>
+                <option value="15">15%</option>
+                <option value="20">20%</option>
+            </select>
+
+            <button type="button" class="btn btn-calc" onclick="hitungTotalBelanja()" style="margin-top: 10px;">Hitung Total Belanja</button>
+
+            <div class="result-box">
+                <p><span>Total Akhir:</span> <strong id="lblGrandTotal" style="color: #38bdf8;">Rp 0</strong></p>
+            </div>
+
+            <label style="margin-top: 12px;">Masukkan Uang Tunai (Cash):</label>
+            <input type="number" id="cashAmount" placeholder="Nominal uang pembeli..." oninput="hitungKembalianCash()">
+
+            <div class="result-box">
+                <p><span>Uang Kembalian:</span> <strong id="lblChange" style="color: #4ade80;">Rp 0</strong></p>
+            </div>
+
+            <button id="printRetailNotaBtn" style="margin-top: 15px;" class="btn-success">Cetak Struk Kasir Ritel</button>
+        </div>
+
+        <!-- MENU 2: CETAK GAMBAR -->
+        <div class="card">
+            <label>3. Cetak Gambar / Logo Toko:</label>
+            <input type="file" id="imageInput" accept="image/*">
+            <button id="printImageBtn">Kirim Cetak Gambar</button>
+        </div>
+
+        <!-- MENU 3: CETAK PDF -->
+        <div class="card">
+            <label>4. Cetak Dokumen PDF:</label>
+            <input type="file" id="pdfInput" accept="application/pdf">
+            <button id="printPdfBtn">Kirim Cetak PDF (Hal 1)</button>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>Harga Satuan (Rp):</label>
-        <input type="number" id="hargaBarang" value="35000">
-    </div>
+    <script>
+        let bluetoothDevice, printerCharacteristic;
+        let globalGrandTotal = 0;
 
-    <div class="form-group">
-        <label>Jumlah Beli (Qty):</label>
-        <input type="number" id="jumlahBarang" value="2">
-    </div>
+        const PRINTER_SERVICE_UUID = '000018f0-0000-1000-8000-00805f9b34fb';
+        const PRINTER_CHARACTERISTIC_UUID = '00002af1-0000-1000-8000-00805f9b34fb';
+        const statusText = document.getElementById('statusText');
 
-    <button class="btn btn-calc" onclick="hitungTotal()">2. Hitung Total</button>
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                if (!navigator.bluetooth) {
+                    alert("Browser/Aplikasi ini tidak mendukung Web Bluetooth API secara langsung. Pastikan dibuka via Chrome atau APK dengan izin lengkap.");
+                    return;
+                }
+                statusText.innerText = "Mencari perangkat...";
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: [PRINTER_SERVICE_UUID, '0000ff00-0000-1000-8000-00805f9b34fb']
+                });
+                const server = await bluetoothDevice.gatt.connect();
+                const service = await server.getPrimaryService(PRINTER_SERVICE_UUID).catch(() => {
+                    return server.getPrimaryService('0000ff00-0000-1000-8000-00805f9b34fb');
+                });
+                printerCharacteristic = await service.getCharacteristic(PRINTER_CHARACTERISTIC_UUID).catch(async () => {
+                    let chars = await service.getCharacteristics();
+                    return chars[0];
+                });
+                statusText.innerText = "Terhubung: " + (bluetoothDevice.name || "Printer Thermal");
+                statusText.style.color = "#4ade80";
+                document.getElementById('connectBtn').style.background = "#059669";
+                document.getElementById('connectBtn').innerText = "Terhubung ✓";
+            } catch (error) {
+                statusText.innerText = "Gagal terhubung: " + error.message;
+            }
+        });
 
-    <div class="form-group">
-        <label>Uang Tunai / Cash (Rp):</label>
-        <input type="number" id="uangCash" placeholder="Masukkan jumlah uang..." oninput="hitungKembalian()">
-    </div>
+        async function sendToPrinter(data) {
+            if (!printerCharacteristic) {
+                alert("Simulasi Berhasil! (Printer belum terhubung secara fisik via bluetooth).");
+                return false;
+            }
+            const chunkSize = 512;
+            for (let i = 0; i < data.length; i += chunkSize) {
+                let chunk = data.slice(i, i + chunkSize);
+                await printerCharacteristic.writeValue(chunk);
+            }
+            return true;
+        }
 
-    <div class="result-box">
-        <p><span>Total Belanja:</span> <strong id="lblTotal">Rp 0</strong></p>
-        <p><span>Uang Tunai:</span> <strong id="lblCash">Rp 0</strong></p>
-        <p><span>Uang Kembalian:</span> <strong id="lblKembalian" style="color: #27ae60;">Rp 0</strong></p>
-    </div>
+        // Tambah baris item dinamis (Unlimited)
+        document.getElementById('addItemBtn').addEventListener('click', () => {
+            const container = document.getElementById('itemsContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'item-row';
+            newRow.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <label style="font-size: 12px; margin:0;">Nama Barang:</label>
+                    <button type="button" class="btn-danger" onclick="this.parentElement.parentElement.remove()">Hapus</button>
+                </div>
+                <input type="text" class="input-name" placeholder="Nama Produk">
+                <div class="row">
+                    <div>
+                        <label style="font-size: 12px;">Harga (Rp):</label>
+                        <input type="number" class="input-price" value="0">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px;">Qty:</label>
+                        <input type="number" class="input-qty" value="1">
+                    </div>
+                </div>
+            `;
+            container.appendChild(newRow);
+        });
 
-    <button class="btn btn-print" onclick="cetakStruk()" style="margin-top: 15px;">3. Cetak Struk Ritel</button>
-</div>
+        function formatIDR(num) {
+            return "Rp " + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
 
-<script>
-    let bluetoothDevice = null;
-    let bluetoothCharacteristic = null;
-    let totalAkhir = 0;
+        function hitungTotalBelanja() {
+            let rowElements = document.querySelectorAll('.item-row');
+            let subtotalAll = 0;
 
-    async function hubungkanPrinter() {
-        const statusEl = document.getElementById('statusPrinter');
-        try {
-            if (!navigator.bluetooth) {
-                alert("Perangkat atau Aplikasi ini tidak mendukung Web Bluetooth API!");
+            rowElements.forEach(row => {
+                let price = parseFloat(row.querySelector('.input-price').value) || 0;
+                let qty = parseInt(row.querySelector('.input-qty').value) || 1;
+                subtotalAll += (price * qty);
+            });
+
+            let discountPct = parseInt(document.getElementById('discountPct').value) || 0;
+            let discountAmount = (subtotalAll * discountPct) / 100;
+            globalGrandTotal = subtotalAll - discountAmount;
+
+            document.getElementById('lblGrandTotal').innerText = formatIDR(globalGrandTotal);
+            hitungKembalianCash();
+        }
+
+        function hitungKembalianCash() {
+            let cash = parseFloat(document.getElementById('cashAmount').value) || 0;
+            let change = cash - globalGrandTotal;
+            if (change >= 0) {
+                document.getElementById('lblChange').innerText = formatIDR(change);
+            } else {
+                document.getElementById('lblChange').innerText = "Uang Tunai Kurang!";
+            }
+        }
+
+        function formatLine(left, right, width = 32) {
+            if (left.length + right.length >= width) {
+                return left + " " + right;
+            }
+            let spaces = width - (left.length + right.length);
+            return left + " ".repeat(spaces) + right;
+        }
+
+        // Cetak Struk Ritel
+        document.getElementById('printRetailNotaBtn').addEventListener('click', async () => {
+            hitungTotalBelanja();
+            let storeName = document.getElementById('storeName').value;
+            let storeAddress = document.getElementById('storeAddress').value;
+            let discountPct = parseInt(document.getElementById('discountPct').value) || 0;
+            let cash = parseFloat(document.getElementById('cashAmount').value) || 0;
+            let change = cash - globalGrandTotal;
+
+            if (cash < globalGrandTotal) {
+                alert("Uang tunai pembeli masih kurang, Boss!");
                 return;
             }
-            statusEl.innerText = "Mencari Printer Bluetooth...";
-            bluetoothDevice = await navigator.bluetooth.requestDevice({
-                acceptAllDevices: true,
-                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '0000ff00-0000-1000-8000-00805f9b34fb']
+
+            let rowElements = document.querySelectorAll('.item-row');
+            if (rowElements.length === 0) return alert("Tambahkan minimal 1 barang!");
+
+            let items = [];
+            let subtotalAll = 0;
+            rowElements.forEach(row => {
+                let name = row.querySelector('.input-name').value || "Barang";
+                let price = parseFloat(row.querySelector('.input-price').value) || 0;
+                let qty = parseInt(row.querySelector('.input-qty').value) || 1;
+                let totalItem = price * qty;
+                subtotalAll += totalItem;
+                items.push({ name, price, qty, totalItem });
             });
 
-            const server = await bluetoothDevice.gatt.connect();
-            const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb').catch(() => {
-                return server.getPrimaryService('0000ff00-0000-1000-8000-00805f9b34fb');
+            let discountAmount = (subtotalAll * discountPct) / 100;
+            let now = new Date();
+            let dateStr = now.toLocaleDateString('id-ID') + " " + now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+
+            let struk = "";
+            struk += "\x1B\x40\x1B\x61\x01";
+            struk += storeName.toUpperCase() + "\n";
+            struk += storeAddress + "\n";
+            struk += "================================\n";
+            struk += "\x1B\x61\x00";
+            struk += "Tgl : " + dateStr + "\n";
+            struk += "Nota: #" + Math.floor(1000 + Math.random() * 9000) + "\n";
+            struk += "--------------------------------\n";
+
+            items.forEach((item, index) => {
+                struk += (index + 1) + ". " + item.name + "\n";
+                let detailQtyPrice = item.qty + " pcs x " + formatIDR(item.price);
+                struk += formatLine(detailQtyPrice, formatIDR(item.totalItem)) + "\n";
             });
+
+            struk += "--------------------------------\n";
+            struk += formatLine("SUBTOTAL", formatIDR(subtotalAll)) + "\n";
+            if (discountPct > 0) {
+                struk += formatLine("DISKON (" + discountPct + "%)", "-" + formatIDR(discountAmount)) + "\n";
+            }
+            struk += formatLine("TOTAL AKHIR", formatIDR(globalGrandTotal)) + "\n";
+            struk += formatLine("TUNAI (CASH)", formatIDR(cash)) + "\n";
+            struk += formatLine("KEMBALIAN", formatIDR(change >= 0 ? change : 0)) + "\n";
+            struk += "================================\n";
+            struk += "\x1B\x61\x01";
+            struk += "TERIMA KASIH TELAH BERBELANJA\n";
+            struk += " Layanan Konsumen: 0812-3456 \n";
+            struk += "================================\n\n\n\n";
+
+            let encoder = new TextEncoder();
+            let success = await sendToPrinter(encoder.encode(struk));
+            if(success) alert("Struk ritel berhasil dicetak!");
+        });
+
+        async function printCanvas(canvas) {
+            let ctx = canvas.getContext('2d');
+            let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let bytes = [];
+            bytes.push(0x1B, 0x40);
+            bytes.push(0x1D, 0x76, 0x30, 0x00);
             
-            bluetoothCharacteristic = await service.getCharacteristics();
-            statusEl.innerText = "Status: Terhubung ke " + bluetoothDevice.name;
-            statusEl.style.color = "#27ae60";
-            alert("Printer Berhasil Terhubung!");
-        } catch (error) {
-            console.error(error);
-            statusEl.innerText = "Gagal terhubung: " + error.message;
-            alert("Gagal terhubung ke printer. Pastikan Bluetooth aktif.");
-        }
-    }
+            let wBytes = Math.ceil(canvas.width / 8);
+            let hRows = canvas.height;
+            bytes.push(wBytes % 256, Math.floor(wBytes / 256));
+            bytes.push(hRows % 256, Math.floor(hRows / 256));
 
-    function hitungTotal() {
-        const harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
-        const qty = parseFloat(document.getElementById('jumlahBarang').value) || 0;
-        totalAkhir = harga * qty;
-
-        document.getElementById('lblTotal').innerText = "Rp " + totalAkhir.toLocaleString('id-ID');
-        hitungKembalian();
-    }
-
-    function hitungKembalian() {
-        const cash = parseFloat(document.getElementById('uangCash').value) || 0;
-        document.getElementById('lblCash').innerText = "Rp " + cash.toLocaleString('id-ID');
-        
-        const kembalian = cash - totalAkhir;
-        if (kembalian >= 0) {
-            document.getElementById('lblKembalian').innerText = "Rp " + kembalian.toLocaleString('id-ID');
-        } else {
-            document.getElementById('lblKembalian').innerText = "Uang Kurang!";
-        }
-    }
-
-    async function cetakStruk() {
-        hitungTotal();
-        const cash = parseFloat(document.getElementById('uangCash').value) || 0;
-        const kembalian = cash - totalAkhir;
-
-        if (cash < totalAkhir) {
-            alert("Uang tunai masih kurang, Boss!");
-            return;
+            for (let y = 0; y < hRows; y++) {
+                for (let x = 0; x < wBytes; x++) {
+                    let byte = 0;
+                    for (let bit = 0; bit < 8; bit++) {
+                        let pxIndex = (y * canvas.width + (x * 8 + bit)) * 4;
+                        if (pxIndex < imgData.data.length) {
+                            let avg = (imgData.data[pxIndex] + imgData.data[pxIndex+1] + imgData.data[pxIndex+2]) / 3;
+                            if (avg < 128) byte |= (1 << (7 - bit));
+                        }
+                    }
+                    bytes.push(byte);
+                }
+            }
+            bytes.push(0x0A, 0x0A, 0x0A);
+            await sendToPrinter(new Uint8Array(bytes));
         }
 
-        const nama = document.getElementById('namaBarang').value;
-        const harga = document.getElementById('hargaBarang').value;
-        const qty = document.getElementById('jumlahBarang').value;
+        document.getElementById('printImageBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('imageInput');
+            if (!fileInput.files[0]) return alert("Pilih file gambar terlebih dahulu!");
+            const targetWidth = parseInt(document.getElementById('printerWidth').value);
 
-        // Format Teks Struk Thermal ESC/POS
-        let textToPrint = "\x1B\x40"; // Inisialisasi printer
-        textToPrint += "\x1B\x61\x01"; // Rata tengah (Center)
-        textToPrint += "TOKO RITEL KASIR\n";
-        textToPrint += "================================\n";
-        textToPrint += "\x1B\x61\x00"; // Rata kiri (Left)
-        textToPrint += `Barang : ${nama}\n`;
-        textToPrint += `Harga  : Rp ${parseInt(harga).toLocaleString('id-ID')} x ${qty}\n`;
-        textToPrint += "--------------------------------\n";
-        textToPrint += `TOTAL  : Rp ${totalAkhir.toLocaleString('id-ID')}\n`;
-        textToPrint += `TUNAI  : Rp ${cash.toLocaleString('id-ID')}\n`;
-        textToPrint += `KEMBALI: Rp ${kembalian.toLocaleString('id-ID')}\n`;
-        textToPrint += "--------------------------------\n";
-        textToPrint += "\x1B\x61\x01"; // Rata tengah
-        textToPrint += "Terima Kasih Atas Kunjungan Anda\n\n\n";
+            let img = new Image();
+            img.src = URL.createObjectURL(fileInput.files[0]);
+            img.onload = async function () {
+                let canvas = document.createElement('canvas');
+                let ctx = canvas.getContext('2d');
+                let scale = targetWidth / img.width;
+                canvas.width = targetWidth;
+                canvas.height = img.height * scale;
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                await printCanvas(canvas);
+                alert("Gambar berhasil dicetak!");
+            }
+        });
 
-        if (!bluetoothCharacteristic) {
-            alert("Simulasi Struk Ritel Berhasil Dicetak! (Hubungkan printer bluetooth untuk cetak fisik).");
-            return;
-        }
+        document.getElementById('printPdfBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('pdfInput');
+            if (!fileInput.files[0]) return alert("Pilih file PDF terlebih dahulu!");
+            const targetWidth = parseInt(document.getElementById('printerWidth').value);
 
-        try {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(textToPrint);
-            
-            // Kirim data ke karakteristik bluetooth printer
-            let targetChar = Array.isArray(bluetoothCharacteristic) ? bluetoothCharacteristic[0] : bluetoothCharacteristic;
-            await targetChar.writeValue(data);
-            alert("Struk ritel berhasil dicetak!");
-        } catch (err) {
-            alert("Gagal kirim data ke printer: " + err.message);
-        }
-    }
-</script>
-
+            let reader = new FileReader();
+            reader.readAsArrayBuffer(fileInput.files[0]);
+            reader.onload = async function() {
+                let typedarray = new Uint8Array(this.result);
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                let pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let page = await pdf.getPage(1);
+                let viewport = page.getViewport({ scale: 1.5 });
+                let canvas = document.createElement('canvas');
+                let ctx = canvas.getContext('2d');
+                canvas.width = targetWidth;
+                let scale = targetWidth / viewport.width;
+                viewport = page.getViewport({ scale: scale });
+                canvas.height = viewport.height;
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                await printCanvas(canvas);
+                alert("PDF Halaman 1 berhasil dicetak!");
+            }
+        });
+    </script>
 </body>
 </html>
