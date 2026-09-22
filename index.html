@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thermal Print Pro - All in One</title>
+    <title>Thermal Print Pro - Ultimate Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -109,7 +109,7 @@
     <div class="container">
         <div class="header">
             <h1>THERMAL PRINT PRO</h1>
-            <p>Kasir Ritel, Gambar & PDF Terpadu</p>
+            <p>Kasir Ritel, Teks,Image & pdf</p>
         </div>
         
         <!-- KONEKSI BLUETOOTH -->
@@ -131,8 +131,8 @@
             <label>Nama Toko:</label>
             <input type="text" id="storeName" value="MINI MART OFFICIAL">
 
-            <label>Alamat & Kontak:</label>
-            <input type="text" id="storeAddress" value="Jl. Raya Merdeka No. 45, Bandung">
+            <label>Alamat & Kontak Toko:</label>
+            <input type="text" id="storeAddress" value="Jl. Raya Merdeka No. 45, Bandung | Telp: 0812-3456-7890">
 
             <label style="margin-top: 15px; color: #facc15;">Daftar Barang Belanjaan (Unlimited):</label>
             <div id="itemsContainer">
@@ -254,15 +254,22 @@
             }
         });
 
+        // Fungsi pengiriman data dengan chunk kecil + delay anti buffer overflow
         async function sendToPrinter(data) {
             if (!printerCharacteristic) {
                 alert("Simulasi Berhasil! (Printer belum terhubung via bluetooth).");
                 return false;
             }
-            const chunkSize = 512;
+            
+            try {
+                await printerCharacteristic.writeValue(new Uint8Array([0x1B, 0x40]));
+            } catch(e) {}
+
+            const chunkSize = 128; 
             for (let i = 0; i < data.length; i += chunkSize) {
                 let chunk = data.slice(i, i + chunkSize);
                 await printerCharacteristic.writeValue(chunk);
+                await new Promise(resolve => setTimeout(resolve, 20));
             }
             return true;
         }
@@ -323,7 +330,7 @@
             }
         }
 
-        // Cetak Struk Ritel dengan Lebar Kolom Dinamis (Aman untuk 48mm, 75mm & 80mm)
+        // CETAK STRUK RITEL DENGAN FORMAT LENGKAP RAPI
         document.getElementById('printRetailNotaBtn').addEventListener('click', async () => {
             hitungTotalBelanja();
             let storeName = document.getElementById('storeName').value;
@@ -368,22 +375,33 @@
             };
 
             let struk = "";
-            struk += "\x1B\x40\x1B\x61\x01";
+            struk += "\x1B\x40"; 
+            
+            // HEADER
+            struk += "\x1B\x61\x01"; 
+            struk += "\x1B\x21\x20"; 
             struk += storeName.toUpperCase() + "\n";
+            struk += "\x1B\x21\x00"; 
             struk += storeAddress + "\n";
             struk += createLine("=") + "\n";
+            
+            // INFO TRANSAKSI
             struk += "\x1B\x61\x00";
-            struk += "Tgl : " + dateStr + "\n";
-            struk += "Nota: #" + Math.floor(1000 + Math.random() * 9000) + "\n";
+            struk += "Tgl  : " + dateStr + "\n";
+            struk += "Nota : #" + Math.floor(1000 + Math.random() * 9000) + "\n";
+            struk += "Kasir: Admin Toko\n";
             struk += createLine("-") + "\n";
 
+            // DAFTAR ITEM
             items.forEach((item, index) => {
                 struk += (index + 1) + ". " + item.name + "\n";
-                let detailQtyPrice = item.qty + "x " + formatIDR(item.price);
-                struk += formatDynamicLine("  " + detailQtyPrice, formatIDR(item.totalItem)) + "\n";
+                let detailQtyPrice = "   " + item.qty + "x " + formatIDR(item.price);
+                struk += formatDynamicLine(detailQtyPrice, formatIDR(item.totalItem)) + "\n";
             });
 
             struk += createLine("-") + "\n";
+            
+            // RINCIAN PEMBAYARAN
             struk += formatDynamicLine("SUBTOTAL", formatIDR(subtotalAll)) + "\n";
             if (discountPct > 0) {
                 struk += formatDynamicLine("DISKON (" + discountPct + "%)", "-" + formatIDR(discountAmount)) + "\n";
@@ -391,43 +409,77 @@
             struk += formatDynamicLine("TOTAL AKHIR", formatIDR(globalGrandTotal)) + "\n";
             struk += formatDynamicLine("TUNAI (CASH)", formatIDR(cash)) + "\n";
             struk += formatDynamicLine("KEMBALIAN", formatIDR(change >= 0 ? change : 0)) + "\n";
+            
             struk += createLine("=") + "\n";
-            struk += "\x1B\x61\x01";
-            struk += "TERIMA KASIH TELAH BERBELANJA\n";
-            struk += createLine("=") + "\n\n\n";
+            
+            // FOOTER LENGKAP
+            struk += "\x1B\x61\x01"; 
+            struk += "TERIMA KASIH ATAS KUNJUNGAN ANDA\n";
+            struk += "Barang yang sudah dibeli tidak\n";
+            struk += "dapat ditukar/dikembalikan.\n";
+            struk += createLine("~") + "\n";
+            struk += storeName.toUpperCase() + "\n";
+            struk += "Layanan Pelanggan & Kritik/Saran\n";
+            struk += "Hubungi: 0812-3456-7890\n";
+            struk += createLine("=") + "\n\n\n\n";
 
             let encoder = new TextEncoder();
             let success = await sendToPrinter(encoder.encode(struk));
-            if(success) alert("Struk ritel berhasil dicetak dengan rapi!");
+            if(success) alert("Struk berhasil dicetak dengan sangat rapi dan lengkap, Boss!");
         });
 
+        // FUNGSI STABIL CETAK GAMBAR / LOGO (BLOK PER BARIS)
         async function printCanvas(canvas) {
             let ctx = canvas.getContext('2d');
-            let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let bytes = [];
-            bytes.push(0x1B, 0x40);
-            bytes.push(0x1D, 0x76, 0x30, 0x00);
+            let width = canvas.width;
+            let height = canvas.height;
+            let imgData = ctx.getImageData(0, 0, width, height);
             
-            let wBytes = Math.ceil(canvas.width / 8);
-            let hRows = canvas.height;
-            bytes.push(wBytes % 256, Math.floor(wBytes / 256));
-            bytes.push(hRows % 256, Math.floor(hRows / 256));
+            await sendToPrinter(new Uint8Array([0x1B, 0x40, 0x1B, 0x61, 0x01]));
 
-            for (let y = 0; y < hRows; y++) {
-                for (let x = 0; x < wBytes; x++) {
-                    let byte = 0;
-                    for (let bit = 0; bit < 8; bit++) {
-                        let pxIndex = (y * canvas.width + (x * 8 + bit)) * 4;
-                        if (pxIndex < imgData.data.length) {
-                            let avg = (imgData.data[pxIndex] + imgData.data[pxIndex+1] + imgData.data[pxIndex+2]) / 3;
-                            if (avg < 128) byte |= (1 << (7 - bit));
+            let bytesPerLine = Math.ceil(width / 8);
+            const blockHeight = 24;
+            
+            for (let yStart = 0; yStart < height; yStart += blockHeight) {
+                let currentBlockHeight = Math.min(blockHeight, height - yStart);
+                
+                let header = [
+                    0x1D, 0x76, 0x30, 0x00, 
+                    bytesPerLine % 256, Math.floor(bytesPerLine / 256), 
+                    currentBlockHeight % 256, Math.floor(currentBlockHeight / 256) 
+                ];
+                
+                let blockData = [];
+                for (let y = 0; y < currentBlockHeight; y++) {
+                    let actualY = yStart + y;
+                    for (let xByte = 0; xByte < bytesPerLine; xByte++) {
+                        let byteVal = 0;
+                        for (let bit = 0; bit < 8; bit++) {
+                            let xPixel = (xByte * 8) + bit;
+                            if (xPixel < width) {
+                                let idx = (actualY * width + xPixel) * 4;
+                                let r = imgData.data[idx];
+                                let g = imgData.data[idx + 1];
+                                let b = imgData.data[idx + 2];
+                                let gray = (r * 0.299 + g * 0.587 + b * 0.114);
+                                if (gray < 128) {
+                                    byteVal |= (1 << (7 - bit));
+                                }
+                            }
                         }
+                        blockData.push(byteVal);
                     }
-                    bytes.push(byte);
                 }
+                
+                let packet = new Uint8Array(header.length + blockData.length);
+                packet.set(header, 0);
+                packet.set(blockData, header.length);
+                
+                await sendToPrinter(packet);
+                await new Promise(resolve => setTimeout(resolve, 30));
             }
-            bytes.push(0x0A, 0x0A, 0x0A);
-            await sendToPrinter(new Uint8Array(bytes));
+            
+            await sendToPrinter(new Uint8Array([0x0A, 0x0A, 0x0A]));
         }
 
         document.getElementById('printImageBtn').addEventListener('click', async () => {
@@ -447,7 +499,7 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 await printCanvas(canvas);
-                alert("Gambar berhasil dicetak!");
+                alert("Gambar berhasil dicetak dengan stabil!");
             }
         });
 
